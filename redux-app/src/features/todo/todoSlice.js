@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { read, create, update, remove } from './todoAPI';
+import * as API from './todoAPI';
 import { READ_TODO, CREATE_TODO, UPDATE_TODO, REMOVE_TODO } from '../../utils/constants';
 
 const initialState = {
@@ -11,7 +11,7 @@ export const readTodo = createAsyncThunk(
   READ_TODO,
   async () => {
     try {
-      const { data } = await read();
+      const { data } = await API.read();
       if (data.success) {
         return data.data.map(item => {
           item.sent = true
@@ -28,12 +28,44 @@ export const readTodo = createAsyncThunk(
   }
 );
 
+export const createTodoAsync = createAsyncThunk(
+  CREATE_TODO,
+  async (todos, _id, title) => {
+    try {
+      const { data } = await API.create(title);
+      if (data.success) {
+        return todos.map(item => {
+          if (item._id === _id) {
+            return { ...data.data, sent: true }
+          }
+          return item
+        })
+      } else {
+        return todos.map(item => {
+          if (item._id === _id) {
+            item.sent = false
+          }
+          return item
+        })
+      }
+    } catch (error) {
+      return todos.map(item => {
+        if (item._id === _id) {
+          item.sent = false
+        }
+        return item
+      })
+    }
+  }
+
+);
+
 export const todoSlice = createSlice({
   name: 'todo',
   initialState,
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
-    addTodo: (state, action) => {
+    create: (state, action) => {
       state.todos = [
         ...state.todos,
         {
@@ -43,11 +75,10 @@ export const todoSlice = createSlice({
         }
       ]
     },
-    updateTodo: (state, action) => {
+    update: (state, action) => {
       state.todos = [];
     },
-    // Use the PayloadAction type to declare the contents of `action.payload`
-    removeTodo: (state, action) => {
+    remove: (state, action) => {
       state.todos = [];
     },
   },
@@ -65,20 +96,16 @@ export const todoSlice = createSlice({
   },
 });
 
-export const { addTodo, updateTodo, removeTodo } = counterSlice.actions;
+const { create, update, remove } = todoSlice.actions;
 
-// The function below is called a selector and allows us to select a value from
-// the state. Selectors can also be defined inline where they're used instead of
-// in the slice file. For example: `useSelector((state: RootState) => state.counter.value)`
-export const selectCount = (state) => state.counter.value;
+export const selectTodos = (state) => state.todo.todos;
 
-// We can also write thunks by hand, which may contain both sync and async logic.
-// Here's an example of conditionally dispatching actions based on current state.
-export const incrementIfOdd = (amount) => (dispatch, getState) => {
-  const currentValue = selectCount(getState());
-  if (currentValue % 2 === 1) {
-    dispatch(incrementByAmount(amount));
-  }
+
+export const createTodo = (title) => (dispatch, getState) => {
+  const _id = Date.now()
+  dispatch(create({ _id, title }))
+  const todos = selectTodos(getState());
+  dispatch(createTodoAsync(todos, _id, title))
 };
 
-export default counterSlice.reducer;
+export default todoSlice.reducer;
