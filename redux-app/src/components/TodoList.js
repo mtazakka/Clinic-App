@@ -1,6 +1,16 @@
 import TodoItem from "./TodoItem";
+import React, { useEffect } from "react"
+import { useDispatch, useSelector } from 'react-redux';
+import { selectTodos, readTodo, } from '../features/todo/todoSlice';
 
-export default function TodoList(props) {
+export default function TodoList() {
+    const todos = useSelector(selectTodos)
+    const dispatch = useDispatch()
+
+    useEffect(() => {
+        dispatch(readTodo())
+    }, [dispatch])
+
     return (
         <table className="table table-striped">
             <thead>
@@ -12,12 +22,10 @@ export default function TodoList(props) {
                 </tr>
             </thead>
             <tbody>
-                {props.data.map((item, index) => <TodoItem
+                {todos.map((item, index) => <TodoItem
                     key={item._id}
-                    todo={item} no={index + 1}
-                    update={(title, complete) => props.update(item._id, title, complete)}
-                    remove={() => props.remove(item._id)}
-                    resend={() => props.resend(item._id, item.title)}
+                    todo={item}
+                    no={index + 1}
                 />)}
             </tbody>
         </table>

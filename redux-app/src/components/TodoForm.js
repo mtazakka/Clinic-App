@@ -1,37 +1,34 @@
-import React, { Component } from 'react'
+import React, { useState } from 'react'
+import { useDispatch } from 'react-redux';
+import { createTodo } from '../features/todo/todoSlice';
 
-export default class TodoForm extends Component {
-    constructor(props) {
-        super(props);
-        this.state = { value: '' };
+export default function TodoForm(props) {
 
-        this.handleChange = this.handleChange.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
+    const [value, setValue] = useState("")
+
+    const dispatch = useDispatch();
+
+    const handleChange = (event) => {
+        setValue(event.target.value)
     }
 
-    handleChange(event) {
-        this.setState({ value: event.target.value });
-    }
-
-    handleSubmit(event) {
+    const handleSubmit = (event) => {
         event.preventDefault();
-        this.props.add(this.state.value)
-        this.setState({ value: '' })
+        dispatch(createTodo(value))
+        setValue('')
     }
 
-    render() {
-        return (
-            <form onSubmit={this.handleSubmit}>
-
-                <div className="row mb-3">
-                    <label htmlFor="title" className="col-sm-2 col-form-label">Kerjaan</label>
-                    <div className="col-sm-10">
-                        <input type="text" className="form-control" id="title" value={this.state.value} onChange={this.handleChange} />
-                    </div>
+    return (
+        <form onSubmit={handleSubmit}>
+            <div className="row mb-3">
+                <label htmlFor="title" className="col-sm-2 col-form-label">Kerjaan</label>
+                <div className="col-sm-10">
+                    <input type="text" className="form-control" id="title" value={value} onChange={handleChange} />
                 </div>
+            </div>
 
-                <button type="submit" className="btn btn-primary">Tambah</button>
-            </form>
-        );
-    }
+            <button type="submit" className="btn btn-primary">Tambah</button>
+        </form>
+    );
+
 }
